@@ -1,0 +1,49 @@
+name: Cypress Cross-Browser E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  cypress-matrix:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        browser: [chrome, firefox, electron]
+
+    name: Test on ${{ matrix.browser }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        run: npm install
+        working-directory: contalink-cypress-test
+
+      - name: Ejecutar pruebas Cypress en ${{ matrix.browser }}
+        run: npx cypress run --browser ${{ matrix.browser }}
+        working-directory: contalink-cypress-test
+        env:
+          CYPRESS_baseUrl: ${{ secrets.CYPRESS_BASE_URL }}
+          CYPRESS_accessCode: ${{ secrets.CYPRESS_ACCESS_CODE }}
+
+      - name: Subir screenshots (si falla)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ matrix.browser }}
+          path: cypress/screenshots
+
+      - name: Subir videos
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-${{ matrix.browser }}
+          path: cypress/videos
