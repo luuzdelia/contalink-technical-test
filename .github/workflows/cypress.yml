@@ -6,8 +6,9 @@ on:
   pull_request:
 
 jobs:
-  cypress-matrix:
+  quality:
     runs-on: ubuntu-latest
+    environment: main
 
     strategy:
       matrix:
@@ -26,11 +27,11 @@ jobs:
 
       - name: Instalar dependencias
         run: npm install
-        # working-directory: contalink-cypress-test
+        working-directory: contalink-cypress-test
 
       - name: Ejecutar pruebas Cypress en ${{ matrix.browser }}
         run: npx cypress run --browser ${{ matrix.browser }}
-        # working-directory: contalink-cypress-test
+        working-directory: contalink-cypress-test
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           CYPRESS_ACCESS_CODE: ${{ secrets.CYPRESS_ACCESS_CODE }}
@@ -40,10 +41,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: screenshots-${{ matrix.browser }}
-          path: cypress/screenshots
+          path: contalink-cypress-test/cypress/screenshots
+          if-no-files-found: ignore
 
       - name: Subir videos
         uses: actions/upload-artifact@v4
         with:
           name: videos-${{ matrix.browser }}
-          path: cypress/videos
+          path: contalink-cypress-test/cypress/videos
+          if-no-files-found: ignore
