@@ -1,0 +1,425 @@
+{
+	"info": {
+		"_postman_id": "b88e7341-0a62-487c-84cd-a2f1b09227c2",
+		"name": "Contalink Test",
+		"description": "En esta colección de pruebas se valida el comportamiento de la **API Contalink** para la búsqueda y creación de facturas, donde se abarcan casos desde _happy path_ hasta _edge cases_. Las pruebas se ejecutan desde Postman utilizando scripts en _Pre-request_ y _Post-response_.\n\nLa colección cuenta con **17 casos de prueba** distribuidos alrededor de los 4 request. Cada uno de ellos se pueden revisar en la pestaña _Scripts_ en la sección de _Post-response_.\n\nA continuación se presenta la estructura de la colección:\n\n- **GET /V1/invoices/**_**:page**_**.** Para el listado de las facturas donde se verifica respuesta con status code `200` para una lista vacía o con elementos.\n    \n- **POST V1/invoices.** Para la creación de una factura válida. Donde se comparan los datos enviados con los recibidos.\n    \n- **POST V1/invoices.** Para los errores de validación en el que se permite verificar la respuesta con status code `422` cuando no se ingresa el campo o valor en 'invoice_number', en 'total' se ingresa un valore negativo o el campo o valor de 'invoice_date' no se ingresa.\n    \n- **GET V1/invoices/**_**:page**_**.** Para verificar respuesta con status code `401` cuando no se incluye el valor correcto en los headers para la autenticación.\n    \n\nPara ejecutar las pruebas correctamente, se debe importar el archivo de environment o configurar uno manualmente con el nombre Test Enviroment, a continuación se presentan las variables requeridas:\n\n| **Variable** | **Valor** | **Descripción** |\n| --- | --- | --- |\n| _host_ | [<i>https://candidates-api.contalink.com</i>](https://candidates-api.contalink.com) | URL base de la API |\n| _key_ | Proporcionado en doc para prueba | Autenticación para el header `Authorization` |\n| _invoice_number_ | \\- | Número de factura generado dinámicamente en el pre-request (Opcional) |\n| _total_ | \\- | Monto generado dinámicamente (Opcional) |\n| _invoiceDate_ | \\- | Fecha generada dinámicamente (Opcional) |\n| _status_ | \\- | Estado aleatorio válido (Opcional) |",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23763981"
+	},
+	"item": [
+		{
+			"name": "1 Listado de facturas exito",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Existence of invoices properties\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"invoices\");",
+							"    pm.expect(jsonData.invoices).to.be.an(\"array\");",
+							"",
+							"    //Verificar que el listado de facturas no esté vacío",
+							"    jsonData.invoices.forEach((invoice, index) => {",
+							"        pm.expect(invoice).to.have.property(\"id\");",
+							"        pm.expect(invoice).to.have.property(\"invoiceNumber\");",
+							"        pm.expect(invoice).to.have.property(\"total\");",
+							"        pm.expect(invoice).to.have.property(\"invoiceDate\");",
+							"        pm.expect(invoice).to.have.property(\"status\");",
+							"        pm.expect(invoice).to.have.property(\"active\");",
+							"    });",
+							"});",
+							"",
+							"pm.test(\"Existence of pagination properties\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property(\"pagination\");",
+							"    ",
+							"    //Verificar que la paginación tenga los valores correctos",
+							"    var pagination = jsonData.pagination;",
+							"    pm.expect(pagination).to.have.property(\"totalPages\");",
+							"    pm.expect(pagination).to.have.property(\"currentPage\");",
+							"    pm.expect(pagination).to.have.property(\"nextPage\");",
+							"    pm.expect(pagination).to.have.property(\"prevPage\");",
+							"     ",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{host}}/V1/invoices?page=400",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"V1",
+						"invoices"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "400"
+						}
+					]
+				},
+				"description": "Este endpoint lista las facturas de una página especificada en los Params.\n\n#### Request\n\n- Método: **GET**\n    \n- URL: _**{{host}}**_**/V1/invoices/:**_**pages**_\n    \n\n#### Query params\n\n- page (entero): El número de página de la lista de facturas a consultar.\n    \n\n#### Response\n\nLa respuesta contendrá un objeto JSON estructurado que incluye:\n\n- `invoices` (array): Un listado de objetos de factura, cada uno de los cuales contiene detalles sobre una factura individual como el `id`, `invoice_number`, `total`, `invoiceDate`, `status` y `active`.\n    \n- `pagination` (array): Un listado con detalles generales como `totalPages`, `currentPage`, `nextPage`, `prevPage`.\n    \n\n#### Uso\n\nPara utilizar el endpoint, especifique el número de página deseado en el query param. Por ejemplo, para recuperar la página 400 de facturas, la solicitud sería:\n\n```\nGET {{host}}/V1/invoices?page=400\n\n ```\n\n#### TEST Environment\n\nLas pruebas que se ejecutan en los Scripts son:\n\n1. Valida que retorne correctamente una lista vacía o no vacía con `status code 200`\n    \n2. Verifica que en caso de que exista un arreglo no vacío de `invoices` este cuente con sus propiedades:\n    \n    1. `id`, `invoiceNumber`, `total`, `invoiceDate`, `status`, `active`.\n        \n3. Verifica que exista el bloque `pagination` con sus propiedades:\n    \n    1. `totalPages`, `currentPage`, `nextPage`, `prevPage`"
+			},
+			"response": []
+		},
+		{
+			"name": "2 Creacion de nueva factura",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"",
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Factura creada con los campos esperados\", function () {",
+							"    pm.expect(jsonData).to.have.property(\"id\");",
+							"    pm.expect(jsonData).to.have.property(\"invoiceNumber\");",
+							"    pm.expect(jsonData).to.have.property(\"total\");",
+							"    pm.expect(jsonData).to.have.property(\"invoiceDate\");",
+							"    pm.expect(jsonData).to.have.property(\"status\");",
+							"    pm.expect(jsonData).to.have.property(\"active\");",
+							"});",
+							"",
+							"// Obtener valores del request",
+							"const expectedInvoiceNumber = pm.environment.get(\"invoice_number\");",
+							"const expectedTotal = parseFloat(pm.environment.get(\"total\"));",
+							"const expectedDate = pm.environment.get(\"invoiceDate\");",
+							"const expectedStatus = pm.environment.get(\"status\");",
+							"",
+							"//Validación de los tipos de datos y valores del response",
+							"pm.test(\"Factura creada con los valores enviados en el request\", function () {",
+							"    pm.expect(jsonData.invoiceNumber).to.eql(expectedInvoiceNumber);",
+							"    pm.expect(jsonData.total).to.eql(expectedTotal);",
+							"    pm.expect(jsonData.invoiceDate).to.eql(expectedDate);",
+							"    pm.expect(jsonData.status).to.eql(expectedStatus);",
+							"});",
+							"",
+							"pm.test(\"El campo 'id' es un número\", function () {",
+							"    pm.expect(jsonData.id).to.be.a(\"number\");",
+							"});",
+							"",
+							"pm.test(\"'invoiceNumber' es un string\", function (){",
+							"    pm.expect(jsonData.invoiceNumber).to.be.a(\"string\");",
+							"});",
+							"",
+							"",
+							"pm.test(\"'total' es un número tipo moneda\", function (){",
+							"    pm.expect(jsonData.total).to.be.a(\"number\");",
+							"    pm.expect(jsonData.total).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"'invoiceDate' tiene el formato correcto\", function () {",
+							"    pm.expect(jsonData.invoiceDate).to.match(/^\\d{2}\\/\\d{2}\\/\\d{4} \\d{2}:\\d{2} (AM|PM)$/);",
+							"});",
+							"",
+							"pm.test(\"'status' es uno de los valores permitidos\", function () {",
+							"    const allowedStatuses = [\"Vigente\", \"Pendiente\", \"Pagado\", \"Vencido\", \"Cancelado\"];",
+							"    pm.expect(allowedStatuses).to.include(jsonData.status);",
+							"});",
+							"",
+							"pm.test(\"'active' es un valor booleano\", function () {",
+							"    pm.expect(jsonData.active).to.be.a(\"boolean\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"//INVOICE NUMBER",
+							"// Generar número aleatorio de 7 dígitos (entre 1000000 y 9999999)",
+							"const invoiceNumberRaw = Math.floor(1000000 + Math.random() * 9000000);",
+							"const invoiceNumber = \"F\" + invoiceNumberRaw;",
+							"// Guardar en variable de entorno o global",
+							"pm.environment.set(\"invoice_number\", invoiceNumber);",
+							"",
+							"//TOTAL",
+							"// Generar total como número aleatorio entre 10.00 y 999.99",
+							"const totalRaw = (10 + Math.random() * 989.99).toFixed(2); // 989.99 = 999.99 - 10",
+							"const totalFormatted = parseFloat(totalRaw); // Se asegura que sea número, no string",
+							"// Guardar en variable de entorno o global",
+							"pm.environment.set(\"total\", totalFormatted);",
+							"",
+							"",
+							"//INVOICE DATE",
+							"// Obtener la fecha actual",
+							"const today = new Date();",
+							"// Obtener la fecha hace 2 meses",
+							"const twoMonthsAgo = new Date();",
+							"twoMonthsAgo.setMonth(today.getMonth() - 2);",
+							"// Generar una fecha aleatoria entre esos dos puntos",
+							"const randomTimestamp = new Date(twoMonthsAgo.getTime() + Math.random() * (today.getTime() - twoMonthsAgo.getTime()));",
+							"// Función para formatear en \"dd/MM/yyyy hh:mm A\"",
+							"function formatDate(date) {",
+							"    const pad = (n) => n < 10 ? '0' + n : n;",
+							"",
+							"    const day = pad(date.getDate());",
+							"    const month = pad(date.getMonth() + 1);",
+							"    const year = date.getFullYear();",
+							"",
+							"    let hours = date.getHours();",
+							"    const minutes = pad(date.getMinutes());",
+							"    const ampm = hours >= 12 ? 'PM' : 'AM';",
+							"",
+							"    hours = hours % 12;",
+							"    hours = hours ? hours : 12; // El '0' se convierte en '12'",
+							"",
+							"    return `${day}/${month}/${year} ${pad(hours)}:${minutes} ${ampm}`;",
+							"}",
+							"// Formatear la fecha y guardar como variable",
+							"const formattedDate = formatDate(randomTimestamp);",
+							"pm.environment.set(\"invoiceDate\", formattedDate);",
+							"",
+							"//STATUS",
+							"// Lista de valores posibles para el campo status",
+							"const statusOptions = [\"Vigente\", \"Pendiente\", \"Pagado\", \"Vencido\", \"Cancelado\"];",
+							"// Seleccionar uno al azar",
+							"const randomStatus = statusOptions[Math.floor(Math.random() * statusOptions.length)];",
+							"// Guardarlo en variable de entorno",
+							"pm.environment.set(\"status\", randomStatus);",
+							"",
+							"//Ver si es posible validar que se envien los datos correctamente desde aqui"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{key}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"invoice_number\": \"{{invoice_number}}\",\n    \"total\": {{total}},\n    \"invoice_date\": \"{{invoiceDate}}\",\n    \"status\": \"{{status}}\",\n    \"active\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/V1/invoices",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"V1",
+						"invoices"
+					]
+				},
+				"description": "Este endpoint permite crear una nueva factura en el sistema.\n\n#### Request\n\n- Método: POST\n    \n- URL: {{host}}**/V1/invoices**\n    \n\n#### Parameter request\n\nEl body request debe ser un formato tipo JSON y debe incluir los parámetros:\n\n- `invoice_number` (string): Un identificador para la factura a crear.\n    \n- `total` (number): El monto total de la factura.\n    \n- `invoice_date` (date): Fecha en la que se hizo la compra para la factura.\n    \n- `status` (string): Estatus que debe tener la factura al crearse, existen los valores: `Vigente`, `Pendiente`, `Pagado`, `Vencido`, `Cancelado`.\n    \n- `active` (boolean): Valor opcional, como predeterminado el valor es `true`\n    \n\n#### Formato esperado del Response\n\nUna vez que se haya creado correctamente la factura, la API debe responder con un _status code 201_ y contar con un `id` único además de retornar la información que previamente se ingresó en el request, a continuación se representa una estructura de respuesta esperada:\n\n``` json\n{\n    \"id\": 9367,\n    \"invoiceNumber\": \"F5947358\",\n    \"total\": 654.41,\n    \"invoiceDate\": \"27/05/2025 08:55 AM\",\n    \"status\": \"Vencido\",\n    \"active\": true\n}\n\n ```\n\n#### TEST Environment\n\nLas pruebas que se ejecutan en los Scripts son:\n\n1. Creación correcta de la factura con `status code 201`\n    \n2. Compara los valores enviados vs los valores devueltos\n    \n3. Verifica se obtenga la estructura esperada\n    \n4. Valida el tipo de cada campo:\n    \n    1. `id`: number\n        \n    2. `invoiceNumber`: string\n        \n    3. `total`: número positivo con formato moneda\n        \n    4. `invoiceDate`: formato `dd/MM/yyyy hh:mm AM/PM`\n        \n    5. `status`: uno de 5 valores permitidos\n        \n    6. `active`: booleano, aunque no se envíe en el request, siempre se devuelve"
+			},
+			"response": []
+		},
+		{
+			"name": "3 Intento de creacion de nueva factura",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 422\", function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"pm.test(\"Campo 'invoice_number' es obligatorio\", function () {",
+							"    pm.expect(jsonData).to.have.property(\"error\");",
+							"    pm.expect(jsonData.error).to.include(\"El número de factura es requerido\");",
+							"});",
+							"",
+							"pm.test(\"En campo 'total' no se permiten valores negativos\", function () {",
+							"    pm.expect(jsonData).to.have.property(\"error\");",
+							"    pm.expect(jsonData.error).to.include(\"El total debe ser mayor a cero\");",
+							"});",
+							"",
+							"pm.test(\"Campo 'invoice_date' es obligatorio\", function () {",
+							"    pm.expect(jsonData).to.have.property(\"error\");",
+							"    pm.expect(jsonData.error).to.include(\"La fecha de factura es requerida\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"//INVOICE NUMBER",
+							"// Generar número aleatorio de 7 dígitos (entre 1000000 y 9999999)",
+							"const invoiceNumberRaw = Math.floor(1000000 + Math.random() * 9000000);",
+							"const invoiceNumber = \"F\" + invoiceNumberRaw;",
+							"// Guardar en variable de entorno o global",
+							"pm.environment.set(\"invoice_number\", invoiceNumber);",
+							"",
+							"//TOTAL",
+							"// Generar total como número aleatorio entre 10.00 y 999.99",
+							"const totalRaw = (10 + Math.random() * 989.99).toFixed(2); // 989.99 = 999.99 - 10",
+							"const totalFormatted = parseFloat(totalRaw); // Se asegura que sea número, no string",
+							"// Guardar en variable de entorno o global",
+							"pm.environment.set(\"total\", totalFormatted);",
+							"",
+							"",
+							"//INVOICE DATE",
+							"// Obtener la fecha actual",
+							"const today = new Date();",
+							"// Obtener la fecha hace 2 meses",
+							"const twoMonthsAgo = new Date();",
+							"twoMonthsAgo.setMonth(today.getMonth() - 2);",
+							"// Generar una fecha aleatoria entre esos dos puntos",
+							"const randomTimestamp = new Date(twoMonthsAgo.getTime() + Math.random() * (today.getTime() - twoMonthsAgo.getTime()));",
+							"// Función para formatear en \"dd/MM/yyyy hh:mm A\"",
+							"function formatDate(date) {",
+							"    const pad = (n) => n < 10 ? '0' + n : n;",
+							"",
+							"    const day = pad(date.getDate());",
+							"    const month = pad(date.getMonth() + 1);",
+							"    const year = date.getFullYear();",
+							"",
+							"    let hours = date.getHours();",
+							"    const minutes = pad(date.getMinutes());",
+							"    const ampm = hours >= 12 ? 'PM' : 'AM';",
+							"",
+							"    hours = hours % 12;",
+							"    hours = hours ? hours : 12; // El '0' se convierte en '12'",
+							"",
+							"    return `${day}/${month}/${year} ${pad(hours)}:${minutes} ${ampm}`;",
+							"}",
+							"// Formatear la fecha y guardar como variable",
+							"const formattedDate = formatDate(randomTimestamp);",
+							"pm.environment.set(\"invoiceDate\", formattedDate);",
+							"",
+							"//STATUS",
+							"// Lista de valores posibles para el campo status",
+							"const statusOptions = [\"Vigente\", \"Pendiente\", \"Pagado\", \"Vencido\", \"Cancelado\"];",
+							"// Seleccionar uno al azar",
+							"const randomStatus = statusOptions[Math.floor(Math.random() * statusOptions.length)];",
+							"// Guardarlo en variable de entorno",
+							"pm.environment.set(\"status\", randomStatus);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{key}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"invoice_number\": \"{{invoice_number}}\",\n    \"total\": {{total}},\n    \"invoice_date\": \"{{invoice_date}}\",\n    \"status\": \"{{status}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/V1/invoices",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"V1",
+						"invoices"
+					]
+				},
+				"description": "Este endpoint cuenta con modificaciones para validar los mensajes de error al intentar crear una factura con valores no permitidos.\n\n#### Request\n\n- Método: **POST**\n    \n- URL: {{host}}**/V1/invoices**\n    \n\n#### TEST Environment\n\nLas pruebas que se ejecutan en los Scripts son:\n\n1. Verifica que el mensaje de error se incluya en el response con status code `422`\n    \n2. Simula errores enviando campos inválidos (p. ej. `invoice_number` vacío o `total` negativo)\n    \n3. Se incluye un archivo _data_run.csv_ para ejecutar de forma automática con el runner de Postman específicamente este request, importar localmente para que se pueda verificar que cada iteración del test runner se muestren dos de los test como exitosos.\n    \n\n#### Parameter request\n\nEn caso de que se opte por correr manualmente las pruebas de este endpoint a continuación los parámetros:\n\n- `invoice_number` (string): Un identificador para la factura a crear. Para mostrar el response esperado se puede omitir o enviar vacío.\n    \n- `total` (number): El monto total de la factura. Para mostrar el response esperado se puede enviar un monto negativo.\n    \n- `invoice_date` (date): Fecha en la que se hizo la compra para la factura. Para mostrar el response esperado se puede omitir.\n    \n- `status` (string): Estatus que debe tener la factura al crearse, existen los valores: `Vigente`, `Pendiente`, `Pagado`, `Vencido`, `Cancelado`.\n    \n- `active` (boolean): Valor opcional, como predeterminado el valor es `true`"
+			},
+			"response": []
+		},
+		{
+			"name": "4 Fallo al obtener listado de facturas por autenticacion",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", function () {",
+							"    pm.response.to.have.status(401);",
+							"});",
+							"",
+							"var jsonData = pm.response.json();",
+							"pm.test(\"El mensaje de error de autenticación es el esperado\", function () {",
+							"    pm.expect(jsonData).to.have.property(\"error\");",
+							"    pm.expect(jsonData.error).to.include(\"Unauthorized\");",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{host}}/V1/invoices?page=1",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"V1",
+						"invoices"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						}
+					]
+				},
+				"description": "Este endpoint cuenta con la omisión del valor de Authentication para validar el mensaje de error al intentar obtenter un listado de facturas.\n\n#### Request\n\n- Método: **GET**\n    \n- URL: _**{{host}}**_**/V1/invoices/:**_**pages**_\n    \n\n#### Query params\n\n- page (entero): El número de página de la lista de facturas a consultar.\n    \n\n#### TEST Environment\n\nLas pruebas que se ejecutan en el Script son:\n\n1. Verifica que la respuesta sea `401 Unauthorized` si se omite el valor del header de autorización\n    \n2. Verifica que el mensaje mostrado sea el esperado"
+			},
+			"response": []
+		}
+	]
+}
