@@ -30,7 +30,11 @@ Funcionalidades cubiertas:
 - Scripts para validación de endpoints de creación y lectura de facturas con sus validaciones
 - Uso de datos desde archivo CSV para el 3er endpoint
 
+### Instalación y uso:
+- Importar en Postman los archivos `Contalink_Collection_Test.postman_collection.json` y `Test_Environment.postman_environment.json`
+- Seleccionar el ambiente Test Environment para ejecutar los request
+- Para el tercer endpoint ejecutar un Run Sequence e importar localmente el documento `data_run.csv`
+
 ### Consideraciones
-- Los datos en _data_test.csv_ permiten probar variaciones en Postman de forma parametrizada.
 - El entorno definido (`Test Environment`) apunta al ambiente de pruebas para Postman.
 
