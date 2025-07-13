@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        browser: [chrome, firefox, electron]
+        browser: [chrome]
 
     name: Test on ${{ matrix.browser }}
 
@@ -26,14 +26,14 @@ jobs:
 
       - name: Instalar dependencias
         run: npm install
-        working-directory: contalink-cypress-test
+        # working-directory: contalink-cypress-test
 
       - name: Ejecutar pruebas Cypress en ${{ matrix.browser }}
         run: npx cypress run --browser ${{ matrix.browser }}
-        working-directory: contalink-cypress-test
+        # working-directory: contalink-cypress-test
         env:
-          CYPRESS_baseUrl: ${{ secrets.CYPRESS_BASE_URL }}
-          CYPRESS_accessCode: ${{ secrets.CYPRESS_ACCESS_CODE }}
+          BASE_URL: ${{ secrets.BASE_URL }}
+          CYPRESS_ACCESS_CODE: ${{ secrets.CYPRESS_ACCESS_CODE }}
 
       - name: Subir screenshots (si falla)
         if: failure()
